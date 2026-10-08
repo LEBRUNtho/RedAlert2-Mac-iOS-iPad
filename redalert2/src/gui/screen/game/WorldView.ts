@@ -1,3 +1,4 @@
+import { EventType } from '@/game/event/EventType';
 import { CompositeDisposable } from '@/util/disposable/CompositeDisposable';
 import { WorldScene } from '@/engine/renderable/WorldScene';
 import { WorldViewportHelper } from '@/engine/util/WorldViewportHelper';
@@ -58,8 +59,20 @@ export class WorldView {
         const startLocationIndex = (!localPlayer || localPlayer.isObserver)
             ? this.game.getCombatants()[0].startLocation
             : localPlayer.startLocation;
-        const startPos = this.game.map.startingLocations[startLocationIndex];
+        let startPos = this.game.map.startingLocations[startLocationIndex] ?? { x: Math.floor(this.game.map.mapBounds.getFullSize().width / 2), y: Math.floor(this.game.map.mapBounds.getFullSize().height / 2) };
         const panningHelper = new MapPanningHelper(this.game.map);
+        // Mission : la vue démarre sur le HomeCell de la carte et suit les « Center camera » des scripts.
+        const scenarioState = (this.game as any).scenarioState;
+        if (scenarioState) {
+            const homeTile = scenarioState.homeCell !== undefined ? this.game.map.getTileAtWaypoint(scenarioState.homeCell) : undefined;
+            if (homeTile) {
+                startPos = { x: homeTile.rx, y: homeTile.ry };
+            }
+            const unsubscribe = this.game.events.subscribe(EventType.ScenarioCameraCenter as any, (event: any) => {
+                worldScene.cameraPan.setPan(panningHelper.computeCameraPanFromTile(event.tile.rx, event.tile.ry));
+            });
+            this.disposables.add(unsubscribe);
+        }
         worldScene.cameraPan.setPan(panningHelper.computeCameraPanFromTile(startPos.x, startPos.y));
         try {
             console.log('[WorldView.init] startLocation', { startLocationIndex, startPos });

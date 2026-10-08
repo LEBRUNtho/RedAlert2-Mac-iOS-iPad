@@ -6,7 +6,7 @@ export class BuildObjectTypeCondition extends TriggerCondition {
     constructor(params: any[], trigger: any, objectType: any) {
         super(params, trigger);
         this.objectType = objectType;
-        this.objectIndex = Number(params[1]);
+        this.objectIndex = Number(this.event.params[1]);
     }
     check(event: any, events: any[]): boolean {
         return events.some((event) => event.type === EventType.ObjectSpawn &&

@@ -70,7 +70,16 @@ export class TriggerManager {
         for (const [id, variable] of context.map.getVariables()) {
             this.localVariables.set(id, variable.clone());
         }
+        // Mission : seuls les déclencheurs prévus pour la difficulté choisie existent.
+        const difficulty = (context as any).gameOpts?.scenario?.difficulty;
         for (const trigger of context.map.getTriggers()) {
+            if (difficulty !== undefined) {
+                const d = trigger.difficulties;
+                const enabled = difficulty === 0 ? d.easy : difficulty === 2 ? d.hard : d.medium;
+                if (!enabled) {
+                    continue;
+                }
+            }
             this.triggerInstances.set(trigger.id, this.createTriggerInstance(trigger, context));
         }
         this.disposables.add(context.events.subscribe(event => this.pendingGameEvents.push(event)));
@@ -100,7 +109,14 @@ export class TriggerManager {
                 let allConditionsMet = true;
                 const triggeredTargets: MapObject[] = [];
                 for (const condition of instance.conditions) {
-                    const result = condition.check(context, events);
+                    let result: any;
+                    try {
+                        result = condition.check(context, events);
+                    }
+                    catch (error) {
+                        console.error(`[Déclencheurs] condition de « ${instance.trigger.name} » en échec`, error);
+                        result = false;
+                    }
                     if (typeof result === "boolean") {
                         if (!result) {
                             allConditionsMet = false;
@@ -142,8 +158,39 @@ export class TriggerManager {
     }
     private executeActions(trigger: Trigger, targets: MapObject[], context: GameContext): void {
         for (const action of trigger.actions) {
-            const executor = this.executorFactory.create(action, trigger);
-            executor.execute(context, targets as any);
+            // Une action défaillante ne doit pas figer toute la mission : on la journalise et on continue.
+            try {
+                const executor = this.executorFactory.create(action, trigger);
+                executor.execute(context, targets as any);
+            }
+            catch (error) {
+                console.error(`[Déclencheurs] action ${action.type} de « ${trigger.name} » en échec`, error);
+            }
+        }
+    }
+    /** Mission : un objet apparu en cours de partie (renfort d'une équipe étiquetée) rejoint les cibles d'un tag. */
+    attachObjectToTag(obj: any, tagId: string, context: any): void {
+        let targets = this.targetsByTag.get(tagId);
+        if (!targets) {
+            targets = [];
+            this.targetsByTag.set(tagId, targets);
+        }
+        if (targets.includes(obj)) {
+            return;
+        }
+        targets.push(obj);
+        obj.tag ??= context.map.getTags().find((tag: any) => tag.id === tagId);
+        for (const instance of this.triggerInstances.values()) {
+            if (instance.trigger.tag?.id !== tagId) {
+                continue;
+            }
+            if (instance.targets !== targets) {
+                instance.targets = targets;
+                instance.conditions.forEach((condition) => condition.setTargets(targets!));
+            }
+            if (instance.trigger.tag.repeatType === TagRepeatType.OnceAll) {
+                instance.remainingTargets.add(obj);
+            }
         }
     }
     setTriggerEnabled(triggerId: string, enabled: boolean): void {

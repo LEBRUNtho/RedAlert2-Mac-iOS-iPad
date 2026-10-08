@@ -6,7 +6,7 @@ export class DestroyedAllCondition extends TriggerCondition {
     constructor(params: any[], trigger: any) {
         super(params, trigger);
         this.allDestroyed = false;
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.event.params[1]);
     }
     check(event: any, events: any[]): boolean {
         if (this.allDestroyed) {
@@ -18,8 +18,9 @@ export class DestroyedAllCondition extends TriggerCondition {
             }
             const target = event.target;
             const isTargetTechno = target.isTechno();
-            const isTargetOwner = target.owner.country?.id === this.houseId;
-            const hasNoRemainingObjects = !target.owner.getOwnedObjects(true).length;
+            const isTargetOwner = target.owner?.country?.id === this.houseId;
+            // L'objet détruit figure encore dans la liste de son propriétaire au moment de l'événement.
+            const hasNoRemainingObjects = !target.owner?.getOwnedObjects(true).filter((o: any) => !o.isDestroyed).length;
             return isTargetTechno && isTargetOwner && hasNoRemainingObjects;
         });
         if (hasDestroyedAll) {

@@ -7,7 +7,7 @@ export class DestroyedAllUnitsNavalCondition extends TriggerCondition {
     constructor(params: any[], context: any) {
         super(params, context);
         this.allDestroyed = false;
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.event.params[1]);
     }
     check(event: any, events: any[]): boolean {
         if (this.allDestroyed) {
@@ -18,12 +18,12 @@ export class DestroyedAllUnitsNavalCondition extends TriggerCondition {
                 return false;
             }
             const target = event.target;
-            if (!target.isVehicle() || target.owner.country?.id !== this.houseId) {
+            if (!target.isVehicle() || target.owner?.country?.id !== this.houseId) {
                 return false;
             }
             const remainingNavalUnits = target.owner
                 .getOwnedObjectsByType(ObjectType.Vehicle, true)
-                .filter((unit) => unit.rules.naval).length;
+                .filter((unit: any) => unit.rules.naval && !unit.isDestroyed).length;
             return remainingNavalUnits === 0;
         });
         if (hasDestroyedAll) {

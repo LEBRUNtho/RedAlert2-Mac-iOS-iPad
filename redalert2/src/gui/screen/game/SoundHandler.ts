@@ -1,3 +1,4 @@
+import { controls } from '@/game/campaign/Control';
 import { CompositeDisposable } from '@/util/disposable/CompositeDisposable';
 import { EventType } from '@/game/event/EventType';
 import { SoundKey } from '@/engine/sound/SoundKey';
@@ -441,7 +442,7 @@ export class SoundHandler {
         }
     }
     handleSelectionChangeEvent(event: any): void {
-        if (event.selection.length && event.selection[0].owner === this.player) {
+        if (event.selection.length && controls(this.player, event.selection[0])) {
             const now = Date.now();
             const canPlayFeedback = !this.lastFeedbackTime || now - this.lastFeedbackTime >= 250;
             if (canPlayFeedback) {

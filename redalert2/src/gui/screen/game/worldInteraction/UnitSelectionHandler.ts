@@ -1,3 +1,4 @@
+import { controls } from '@/game/campaign/Control';
 import * as THREE from 'three';
 import { equals } from '@/util/array';
 import { rectContainsPoint } from '@/util/geometry';
@@ -53,7 +54,7 @@ export class UnitSelectionHandler {
         }
         const selected = this.unitSelection.getSelectedUnits();
         if (selected.length &&
-            ((unit.owner === this.player && !selected.find((selectedUnit: any) => selectedUnit.owner !== unit.owner)) ||
+            ((controls(this.player, unit) && !selected.find((selectedUnit: any) => !controls(this.player, selectedUnit))) ||
                 !this.player)) {
             this.unitSelection.addToSelection(unit);
             return;
@@ -174,7 +175,7 @@ export class UnitSelectionHandler {
         const units = this.entityIntersectHelper
             .getEntitiesAtScreenBox(box)
             ?.map((renderable: any) => renderable.gameObject)
-            .filter((gameObject: any) => gameObject.isTechno?.() && gameObject.rules.selectable && gameObject.owner === this.player);
+            .filter((gameObject: any) => gameObject.isTechno?.() && gameObject.rules.selectable && controls(this.player, gameObject));
         if (!units?.length) {
             return false;
         }
@@ -191,7 +192,7 @@ export class UnitSelectionHandler {
     }
     createGroup(groupNumber: number): void {
         const selectedUnits = this.unitSelection.getSelectedUnits();
-        if (selectedUnits.length === 1 && selectedUnits[0].owner !== this.player) {
+        if (selectedUnits.length === 1 && !controls(this.player, selectedUnits[0])) {
             return;
         }
         this.unitSelection.createGroup(groupNumber);

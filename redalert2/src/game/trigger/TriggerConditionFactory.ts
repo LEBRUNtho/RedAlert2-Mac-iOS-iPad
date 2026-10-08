@@ -1,3 +1,4 @@
+import { DiscoveredByPlayerCondition, SelectedByPlayerCondition, HouseDiscoveredCondition, TechTypeExistsCondition, PowerFullCondition } from "@/game/trigger/condition/CampaignConditions";
 import { TriggerEventType } from "@/data/map/trigger/TriggerEventType";
 import { ObjectType } from "@/engine/type/ObjectType";
 import { AmbientLightCondition } from "@/game/trigger/condition/AmbientLightCondition";
@@ -142,6 +143,20 @@ export class TriggerConditionFactory {
                 return new DestroyedAllUnitsLandCondition(e, t);
             case TriggerEventType.BuildingNotExists:
                 return new BuildingExistsCondition(e, t, true);
+            case TriggerEventType.DiscoveredByPlayer:
+                return new DiscoveredByPlayerCondition(e, t);
+            case TriggerEventType.TechTypeExists:
+                return new TechTypeExistsCondition(e, t, false);
+            case TriggerEventType.TechTypeNotExists:
+                return new TechTypeExistsCondition(e, t, true);
+            case TriggerEventType.PowerFull:
+                return new PowerFullCondition(e, t);
+            case TriggerEventType.EnteredOrOverflownBy:
+                return new EnteredByCondition(e, t);
+            case TriggerEventType.HouseDiscovered:
+                return new HouseDiscoveredCondition(e, t);
+            case TriggerEventType.SelectedByPlayer:
+                return new SelectedByPlayerCondition(e, t);
             default:
                 throw new Error(`Unhandled trigger event type "${TriggerEventType[e.type]}"`);
         }

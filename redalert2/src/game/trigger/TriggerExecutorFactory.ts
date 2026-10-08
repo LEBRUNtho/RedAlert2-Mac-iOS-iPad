@@ -1,3 +1,4 @@
+import { WinLoseExecutor, CreateTeamExecutor, DestroyTeamExecutor, ReinforcementExecutor, LockInputExecutor, CenterCameraExecutor, SetSidebarTabExecutor, CampaignNoopExecutor, AllToHuntExecutor, SetAllianceExecutor, RevealZoneExecutor, HouseAiExecutor, IngameMovieExecutor, DestroyAllOfExecutor, CreateBuildingAtExecutor } from "@/game/trigger/executor/CampaignExecutors";
 import { TriggerActionType } from "@/data/map/trigger/TriggerActionType";
 import { AddSuperWeaponExecutor } from "@/game/trigger/executor/AddSuperWeaponExecutor";
 import { ApplyDamageExecutor } from "@/game/trigger/executor/ApplyDamageExecutor";
@@ -144,6 +145,92 @@ export class TriggerExecutorFactory {
                 return new CheerExecutor(e, t);
             case TriggerActionType.StopSoundsAt:
                 return new StopSoundFxAtExecutor(e, t);
+            case TriggerActionType.WinnerIs:
+                return new WinLoseExecutor(e, t, true);
+            case TriggerActionType.LoserIs:
+                return new WinLoseExecutor(e, t, false);
+            case TriggerActionType.CreateTeam:
+                return new CreateTeamExecutor(e, t);
+            case TriggerActionType.DestroyTeam:
+                return new DestroyTeamExecutor(e, t);
+            case TriggerActionType.Reinforcement:
+                return new ReinforcementExecutor(e, t, false);
+            case TriggerActionType.ReinforcementAtWaypoint:
+            case TriggerActionType.ReinforcementByChrono:
+                return new ReinforcementExecutor(e, t, true);
+            case TriggerActionType.AllToHunt:
+                return new AllToHuntExecutor(e, t);
+            case TriggerActionType.MakeAlly:
+                return new SetAllianceExecutor(e, t, true);
+            case TriggerActionType.MakeEnemy:
+                return new SetAllianceExecutor(e, t, false);
+            case TriggerActionType.PlayIngameMovie:
+                return new IngameMovieExecutor(e, t, false);
+            case TriggerActionType.PlayIngameMoviePause:
+            case TriggerActionType.PlayMovie:
+                return new IngameMovieExecutor(e, t, true);
+            case TriggerActionType.JumpCameraAtWaypoint:
+                return new CenterCameraExecutor(e, t);
+            case TriggerActionType.RevealZoneOfWaypoint:
+                return new RevealZoneExecutor(e, t);
+            case TriggerActionType.LockInput:
+                return new LockInputExecutor(e, t, true);
+            case TriggerActionType.UnlockInput:
+                return new LockInputExecutor(e, t, false);
+            case TriggerActionType.CenterCameraAtWaypoint:
+                return new CenterCameraExecutor(e, t);
+            case TriggerActionType.SetSidebarTab:
+                return new SetSidebarTabExecutor(e, t);
+            case TriggerActionType.ProductionBegins:
+                return new HouseAiExecutor(e, t, "production");
+            case TriggerActionType.AITriggersBegin:
+                return new HouseAiExecutor(e, t, "start");
+            case TriggerActionType.AITriggersStop:
+                return new HouseAiExecutor(e, t, "stop");
+            case TriggerActionType.DestroyAllOf:
+                return new DestroyAllOfExecutor(e, t, "all");
+            case TriggerActionType.DestroyAllBuildingsOf:
+                return new DestroyAllOfExecutor(e, t, "buildings");
+            case TriggerActionType.DestroyAllLandUnitsOf:
+                return new DestroyAllOfExecutor(e, t, "land");
+            case TriggerActionType.DestroyAllNavalUnitsOf:
+                return new DestroyAllOfExecutor(e, t, "naval");
+            case TriggerActionType.CreateBuildingAt:
+                return new CreateBuildingAtExecutor(e, t);
+            case TriggerActionType.AnnounceLose:
+            case TriggerActionType.WakeupSelf:
+            case TriggerActionType.SetTechLevel:
+            case TriggerActionType.ClearSmudges:
+            case TriggerActionType.ChronoScreenEffect:
+            case TriggerActionType.TeleportAllTo:
+            case TriggerActionType.SetSuperWeaponCharge:
+            case TriggerActionType.RestoreStartingBuildings:
+            case TriggerActionType.FlashBuildingsOfType:
+            case TriggerActionType.SuperWeaponRechargeTime:
+            case TriggerActionType.PreferredTargetCellSet:
+            case TriggerActionType.PreferredTargetCellClear:
+            case TriggerActionType.CenterBaseCellSet:
+            case TriggerActionType.BlackoutRadar:
+            case TriggerActionType.DropZoneFlare:
+            case TriggerActionType.PreferredTarget:
+            case TriggerActionType.IonStormStart:
+            case TriggerActionType.IonStormStop:
+            case TriggerActionType.RatioOfTeamAircraft:
+            case TriggerActionType.RatioOfTeamInfantry:
+            case TriggerActionType.RatioOfTeamUnits:
+            case TriggerActionType.ParticleAnimAt:
+            case TriggerActionType.RemoveParticleAnimAt:
+            case TriggerActionType.LightningBoltAt:
+            case TriggerActionType.TalkBubble:
+            case TriggerActionType.PauseGame:
+            case TriggerActionType.AutocreateBegins:
+            case TriggerActionType.AllowWin:
+            case TriggerActionType.PlayMusic:
+            case TriggerActionType.ZoomIn:
+            case TriggerActionType.ZoomOut:
+            case TriggerActionType.FlashTeam:
+            case TriggerActionType.FlashCameo:
+                return new CampaignNoopExecutor(e, t);
             default:
                 throw new Error(`Unhandled action type "${TriggerActionType[e.type]}"`);
         }

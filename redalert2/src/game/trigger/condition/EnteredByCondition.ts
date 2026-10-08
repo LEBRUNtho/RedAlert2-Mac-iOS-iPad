@@ -15,7 +15,7 @@ export class EnteredByCondition extends TriggerCondition {
             (event.type !== EventType.EnterTile ||
                 event.source.zone !== ZoneType.Air) &&
             (-1 === this.houseId ||
-                event.source.owner.country?.id === this.houseId))
+                event.source.owner?.country?.id === this.houseId))
             .map((event) => event.target);
     }
 }

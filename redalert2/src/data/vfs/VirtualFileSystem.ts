@@ -223,6 +223,16 @@ export class VirtualFileSystem {
                 }
             }
         }
+        // Campagne : cartes de mission du jeu solo (maps01/02 = CD Alliés/Soviets, mapsmd03 = Yuri).
+        const campaignMixes = ["maps01.mix", "maps02.mix"];
+        if (engineType === EngineType.YurisRevenge) {
+            campaignMixes.unshift("mapsmd03.mix");
+        }
+        for (const name of campaignMixes) {
+            if (rfsEntries.has(name) && !this.hasArchive(name)) {
+                await this.addMixFile(name);
+            }
+        }
         const mapExtensions = [".mmx"];
         if (engineType === EngineType.YurisRevenge) {
             mapExtensions.push(".yro");

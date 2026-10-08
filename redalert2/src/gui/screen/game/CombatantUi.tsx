@@ -151,6 +151,29 @@ export class CombatantUi {
         world.onObjectSpawned.subscribe(updateAvailableObjects);
         world.onObjectRemoved.subscribe(updateAvailableObjects);
         this.disposables.add(() => world.onObjectSpawned.unsubscribe(updateAvailableObjects), () => world.onObjectRemoved.unsubscribe(updateAvailableObjects));
+        // Mission : textes d'objectif, voix d'EVA et effets sonores demandés par les scripts de la carte.
+        if ((this.game as any).scenarioState) {
+            this.disposables.add(this.game.events.subscribe(EventType.TriggerText, (event: any) => {
+                const label = String(event.label);
+                const text = this.strings.get(label);
+                if (text && text !== label) {
+                    this.messageList.addSystemMessage(text, '#ffff00', 12);
+                }
+            }), this.game.events.subscribe(EventType.ScenarioSidebarTab, (event: any) => {
+                // « Set Tab to » : 0 bâtiments, 1 défenses, 2 infanterie, 3 véhicules.
+                if (this.sidebarModel?.tabs?.[event.tab]) {
+                    this.sidebarModel.selectTab(event.tab);
+                }
+            }), this.game.events.subscribe(EventType.TriggerEva, (event: any) => {
+                this.eva?.play?.(event.soundId, true);
+            }), this.game.events.subscribe(EventType.TriggerSoundFx, (event: any) => {
+                // Les ambiances en boucle (_Amb_…) supposent un son spatialisé : on ne joue que les effets ponctuels.
+                const spec = this.sound?.getSoundSpec?.(event.soundId);
+                if (spec && !spec.loop && !spec.control?.has?.(1 /* Loop */) && !spec.control?.has?.(7 /* Ambient */) && !String(event.soundId).startsWith('_Amb')) {
+                    this.sound.play(event.soundId, ChannelType.Effect);
+                }
+            }));
+        }
         this.disposables.add(this.game.events.subscribe(EventType.BuildingInfiltration, (event: any) => {
             if (event.source.owner === this.player) {
                 this.sidebarModel.updateAvailableObjects(this.game.art);
@@ -448,6 +471,10 @@ export class CombatantUi {
         });
     }
     private pushAction(actionType: ActionType, configure?: (action: any) => void): void {
+        // Mission : pendant une scène scriptée (« Lock input »), les ordres du joueur sont ignorés.
+        if ((this.game as any).scenarioState?.inputLocked && actionType !== ActionType.SelectUnits) {
+            return;
+        }
         const action = this.actionFactory.create(actionType);
         action.player = this.player;
         configure?.(action);
@@ -649,8 +676,11 @@ export class CombatantUi {
             selectNextUnitCmd.execute();
         });
         this.disposables.add(selectNextUnitCmd);
-        const startLocation = this.game.map.startingLocations[this.player.startLocation];
-        const startTile = this.game.map.tiles.getByMapCoords(startLocation.x, startLocation.y);
+        // Mission : pas de position de départ multijoueur, la « base » est le HomeCell de la carte.
+        const scenarioHome = (this.game as any).scenarioState?.homeCell;
+        const homeTile = scenarioHome !== undefined ? this.game.map.getTileAtWaypoint(scenarioHome) : undefined;
+        const startLocation = homeTile ? { x: homeTile.rx, y: homeTile.ry } : this.game.map.startingLocations[this.player.startLocation];
+        const startTile = startLocation ? this.game.map.tiles.getByMapCoords(startLocation.x, startLocation.y) : undefined;
         const defaultCameraLocation = startTile
             ? mapPanningHelper.computeCameraPanFromTile(startTile.rx, startTile.ry)
             : this.worldScene.cameraPan.getPan();

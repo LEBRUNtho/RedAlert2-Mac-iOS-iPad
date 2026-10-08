@@ -40,6 +40,8 @@ import { OBS_COUNTRY_ID } from "./gameopts/constants";
 import { getZoneType } from "./gameobject/unit/ZoneType";
 import { Prng } from "./Prng";
 import { TriggerManager } from "./trigger/TriggerManager";
+import { isScenario } from "./campaign/Scenario";
+import { ScenarioState } from "./campaign/ScenarioState";
 import { CountdownTimer } from "./CountdownTimer";
 import { WeaponType } from "./WeaponType";
 import { Warhead } from "./Warhead";
@@ -80,6 +82,10 @@ export class Game {
     public objectFactory: any;
     public botManager: any;
     public triggers = new TriggerManager();
+    /** Mission (campagne) : équipes scriptées, issue de la partie… undefined en escarmouche. */
+    public scenarioState?: ScenarioState;
+    private scenarioNoAssetsSince?: number;
+    private scenarioHadAssets = false;
     public localPlayer: any;
     public mapShroudTrait: any;
     public crateGeneratorTrait: any;
@@ -162,6 +168,13 @@ export class Game {
     init(localPlayer: any) {
         this.localPlayer = localPlayer;
         this.createMapObjects();
+        if (isScenario(this.gameOpts)) {
+            this.map.terrain.computeAllPassabilityGraphs();
+            this.mapShroudTrait.init(this);
+            this.crateGeneratorTrait.init(this);
+            this.initScenarioPlayers();
+            return;
+        }
         this.createPlayerInitialUnits();
         this.map.terrain.computeAllPassabilityGraphs();
         this.mapShroudTrait.init(this);
@@ -177,6 +190,29 @@ export class Game {
         this.currentTime = 0;
         this.botManager.init(this);
         this.triggers.init(this);
+    }
+    /** Mission : crédits et alliances viennent des sections [<Nom> House] de la carte. */
+    initScenarioPlayers() {
+        const byHouse = new Map<string, any>();
+        for (const player of this.playerList.getAll()) {
+            if (player.scenarioHouse) {
+                byHouse.set(player.scenarioHouse.houseName, player);
+                player.credits = player.scenarioHouse.credits;
+            }
+        }
+        for (const player of byHouse.values()) {
+            if (player.controlledBy && !player.isNeutral && !this.alliances.areAllied(player, player.controlledBy)) {
+                this.onAllianceChange(this.alliances.forceAlliance(player, player.controlledBy), player, true);
+            }
+            for (const allyName of player.scenarioHouse.allies) {
+                const ally = byHouse.get(allyName);
+                // Les maisons neutres (civils) ne sont jamais prises pour cible : inutile de les allier.
+                if (ally && ally !== player && !player.isNeutral && !ally.isNeutral && !this.alliances.areAllied(player, ally)) {
+                    const alliance = this.alliances.forceAlliance(player, ally);
+                    this.onAllianceChange(alliance, player, true);
+                }
+            }
+        }
     }
     createInitialTeams() {
         for (let teamId = 0; teamId < this.gameOpts.maxSlots; teamId++) {
@@ -336,6 +372,15 @@ export class Game {
             .getAll()
             .filter((player: any) => !!player.country)
             .map((player: any) => [player.country.name, player]));
+        // Mission : les objets de la carte appartiennent aux maisons (« BadGuy1 House »).
+        const scenario = isScenario(this.gameOpts);
+        if (scenario) {
+            for (const player of this.playerList.getAll()) {
+                if (player.scenarioHouse) {
+                    playersByCountry.set(player.scenarioHouse.houseName, player);
+                }
+            }
+        }
         const tags = this.map.getTags();
         for (const techno of technos) {
             const name = techno.name;
@@ -352,7 +397,7 @@ export class Game {
                 console.warn(`Invalid owner "${techno.owner}" for map object`, techno);
                 continue;
             }
-            if (!(owner as any).isNeutral) {
+            if (!scenario && !(owner as any).isNeutral) {
                 continue;
             }
             const obj = this.createObject(techno.type, name);
@@ -396,6 +441,9 @@ export class Game {
             }
             this.changeObjectOwner(obj, owner);
             this.spawnObject(obj, tile);
+            if (scenario && techno.mission) {
+                this.scenarioState?.noteInitialMission(obj, techno.mission);
+            }
             if (shouldDestroy) {
                 this.destroyObject(obj, undefined, true);
             }
@@ -792,6 +840,7 @@ export class Game {
         }
         this.afterTickCallbacks.length = 0;
         this.triggers.update(this);
+        this.scenarioState?.update(this);
         this.countdownTimer.update(this);
         this.currentTick++;
         this.currentTime += 1000 / GameSpeed.BASE_TICKS_PER_SECOND;
@@ -800,6 +849,32 @@ export class Game {
         this.afterTickCallbacks.push(callback);
     }
     checkGameEndConditions() {
+        if (isScenario(this.gameOpts)) {
+            // Mission : ce sont les déclencheurs (Winner is / Loser is) qui terminent la partie.
+            // Seul garde-fou : le joueur n'a plus rien du tout.
+            // Garde-fou : le joueur n'a plus rien depuis 30 s sans que les scripts aient conclu. Les avions ne
+            // comptent pas (un avion de largage appartient au joueur le temps du vol), et rien avant 2 minutes :
+            // certaines missions donnent ses troupes au joueur par script après la cinématique d'ouverture.
+            const state = this.scenarioState;
+            const human = state?.humanPlayer;
+            const hasAssets = !human || this.playerList.getAll().some((p: any) => state!.isHumanSide(p) &&
+                p.getOwnedObjects(true).some((obj: any) => !obj.isDestroyed && !obj.rules.insignificant && !obj.isAircraft?.()));
+            if (hasAssets) {
+                this.scenarioNoAssetsSince = undefined;
+                this.scenarioHadAssets = true;
+            }
+            else if (!this.scenarioHadAssets || this.currentTick < 120 * GameSpeed.BASE_TICKS_PER_SECOND) {
+                // Certaines missions démarrent sans rien : les troupes du joueur arrivent en renfort.
+            }
+            else if (this.scenarioNoAssetsSince === undefined) {
+                this.scenarioNoAssetsSince = this.currentTick;
+            }
+            else if (this.currentTick - this.scenarioNoAssetsSince > 30 * GameSpeed.BASE_TICKS_PER_SECOND) {
+                console.info("[Campagne] le joueur n'a plus rien depuis 30 s");
+                this.scenarioState?.finish(this, "lose");
+            }
+            return;
+        }
         this.updateDefeatedPlayers(this.playerList.getCombatants());
         const shouldEnd = (this.localPlayer?.defeated && !this.localPlayer.isObserver) ||
             (!this.alliances.getHostilePlayers().length &&

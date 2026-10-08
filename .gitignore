@@ -37,3 +37,15 @@ xcuserdata/
 .idea/
 certs/
 .claude/
+
+# Générés localement (IPA, étape de build)
+releases/
+scripts/.stage-ios.sh
+# Cartes de campagne extraites des MIX du jeu (fichiers EA, régénérables avec redalert2/outils/mixcat.ts)
+campagne/cartes/
+campagne/cartes-yr/
+# Journal de chantier personnel
+campagne/RAPPORT.md
+# Copies de conflit créées par la synchro iCloud quand xcodegen régénère le projet
+ios/RA2 *.xcodeproj/
+ios/Sources/Info *.plist

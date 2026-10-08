@@ -1,3 +1,4 @@
+import { controls } from '@/game/campaign/Control';
 import { PointerType } from '@/engine/type/PointerType';
 import { Coords } from '@/game/Coords';
 import { isNotNullOrUndefined } from '@/util/typeGuard';
@@ -50,7 +51,7 @@ class SelectAction {
             !this.currentPlayer.isObserver &&
             target.isTechno?.() &&
             !this.game.areFriendly(target, selected[0]) &&
-            selected[0].owner === this.currentPlayer) {
+            controls(this.currentPlayer, selected[0])) {
             return false;
         }
         return (target.rules.selectable &&
@@ -159,7 +160,7 @@ export class DefaultActionHandler {
     private getDefaultAction(sourceObject: any, selected: any[], hover: any, filter: ActionFilter, force: boolean, allowTypeSelect: boolean, keyboardEvent: any, minimap: boolean): any {
         const hoveredObject = hover.gameObject;
         const selectAction = this.selectAction.setForce(force).setTypeSelect(false);
-        if (!sourceObject || sourceObject.owner !== this.currentPlayer || sourceObject.rules.spawned) {
+        if (!sourceObject || !controls(this.currentPlayer, sourceObject) || sourceObject.rules.spawned) {
             return !minimap && filter !== ActionFilter.NoSelect && selectAction.isValidTarget(hoveredObject)
                 ? selectAction
                 : undefined;

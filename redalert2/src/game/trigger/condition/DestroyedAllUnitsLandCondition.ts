@@ -7,7 +7,7 @@ export class DestroyedAllUnitsLandCondition extends TriggerCondition {
     constructor(params: any, context: any) {
         super(params, context);
         this.allDestroyed = false;
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.event.params[1]);
     }
     check(events: any, eventList: any[]): boolean {
         if (this.allDestroyed) {
@@ -18,7 +18,7 @@ export class DestroyedAllUnitsLandCondition extends TriggerCondition {
                 return false;
             }
             const target = event.target;
-            if (!target.isUnit() || target.owner.country?.id !== this.houseId) {
+            if (!target.isUnit() || target.owner?.country?.id !== this.houseId) {
                 return false;
             }
             return !this.hasLandUnitsLeft(target.owner);
@@ -30,7 +30,7 @@ export class DestroyedAllUnitsLandCondition extends TriggerCondition {
     }
     private hasLandUnitsLeft(owner: any): boolean {
         for (const type of [ObjectType.Vehicle, ObjectType.Infantry]) {
-            const units = owner.getOwnedObjectsByType(type, true).filter((unit: any) => !unit.rules.naval);
+            const units = owner.getOwnedObjectsByType(type, true).filter((unit: any) => !unit.rules.naval && !unit.isDestroyed);
             if (units.length > 0) {
                 return true;
             }

@@ -11,7 +11,7 @@ export class SpiedByCondition extends TriggerCondition {
             .filter((event) => event.type === EventType.BuildingInfiltration &&
             this.targets.includes(event.target) &&
             (this.houseId === -1 ||
-                event.source.owner.country?.id === this.houseId))
+                event.source.owner?.country?.id === this.houseId))
             .map((event) => event.target);
     }
 }

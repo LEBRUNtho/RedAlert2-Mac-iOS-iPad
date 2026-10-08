@@ -164,6 +164,52 @@ for (const name of ["ra2md.mix", "langmd.mix", "multimd.mix", "expandmd01.mix"])
     }
 }
 
+console.log("== Copying campaign map mixes (maps01/02, mapsmd03)");
+for (const name of ["maps01.mix", "maps02.mix", "mapsmd03.mix"]) {
+    try {
+        copyFileSync(retailFile(name), join(OUT, name));
+        console.log(`   ${name}`);
+    } catch {
+        console.warn(`   (skip) ${name} not found — campaign unavailable`);
+    }
+}
+
+// Films de campagne : noms dans art(md).ini [Movies], contenu dans les MIX de films, convertis en MP4 H.264.
+function convertMovies(label: string, outDirName: string, artMix: string, artLocal: string, artName: string, movieMixNames: string[]): void {
+    console.log(`== Converting ${label} movies -> ${outDirName}/*.mp4`);
+    mkdirSync(join(OUT, outDirName), { recursive: true });
+    let artText = "";
+    try {
+        const artIni = new MixFile(openMix(retailFile(artMix)).openFile(artLocal).stream).openFile(artName);
+        artText = new TextDecoder("latin1").decode(new Uint8Array(artIni.stream.buffer, artIni.stream.byteOffset, artIni.stream.byteLength));
+    } catch {
+        console.warn(`   (skip) ${artName} not found`);
+        return;
+    }
+    const moviesBody = artText.split(/^\[Movies\]\s*$/m)[1]?.split(/^\[/m)[0] ?? "";
+    const movieNames = [...moviesBody.matchAll(/^\d+=([A-Za-z0-9_]+)/gm)].map((m) => m[1]).filter((n) => /^[AS]\d\d_/i.test(n));
+    const movieMixes: any[] = [];
+    for (const name of movieMixNames) {
+        try { movieMixes.push(openMix(retailFile(name))); } catch { console.warn(`   (skip) ${name} not found`); }
+    }
+    let converted = 0;
+    for (const name of movieNames) {
+        const out = join(OUT, outDirName, `${name.toLowerCase()}.mp4`);
+        if (existsSync(out)) { converted++; continue; }
+        const mix = movieMixes.find((m) => m.containsFile(`${name}.bik`));
+        if (!mix) continue;
+        const bik = join(TMP, `${name}.bik`);
+        extractTo(mix, `${name}.bik`, bik);
+        execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", bik, "-c:v", "libx264", "-preset", "slow", "-crf", "28",
+            "-profile:v", "main", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-c:a", "aac", "-b:a", "64k", "-ac", "2", out]);
+        rmSync(bik, { force: true });
+        converted++;
+    }
+    console.log(`   ${converted}/${movieNames.length} movies`);
+}
+convertMovies("RA2 campaign", "movies", "ra2.mix", "local.mix", "art.ini", ["movies01.mix", "movies02.mix"]);
+convertMovies("Yuri's Revenge campaign", "moviesmd", "ra2md.mix", "localmd.mix", "artmd.ini", ["movmd03.mix"]);
+
 console.log("== Copying bonus map packs (*.mmx, *.yro)");
 for (const entry of readdirSync(RETAIL)) {
     if (/\.(mmx|yro)$/i.test(entry)) {

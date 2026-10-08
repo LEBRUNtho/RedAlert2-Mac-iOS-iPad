@@ -23,6 +23,8 @@ export class CountryRules {
     private uiTooltip: string;
     public side!: SideType;
     public multiplay: boolean;
+    /** Pays parent (cartes de mission) : sert aux listes Owner/RequiredHouses. */
+    public parentCountry?: string;
     private multiplayPassive: boolean;
     private veteranAircraft: string[];
     private veteranInfantry: string[];
@@ -44,6 +46,7 @@ export class CountryRules {
         }
         this.side = side;
         this.multiplay = ini.getBool("Multiplay");
+        this.parentCountry = ini.getString("ParentCountry") || undefined;
         this.multiplayPassive = ini.getBool("MultiplayPassive");
         this.veteranAircraft = ini.getArray("VeteranAircraft");
         this.veteranInfantry = ini.getArray("VeteranInfantry");

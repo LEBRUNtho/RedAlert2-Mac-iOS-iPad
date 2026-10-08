@@ -6,7 +6,7 @@ export class FireSaleExecutor extends TriggerExecutor {
     private readonly houseId: number;
     constructor(params: string[], game: Game) {
         super(params, game);
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.action.params[1]);
     }
     execute(game: Game): void {
         const targetPlayer = game.getAllPlayers().find((player: Player) => player.country?.id === this.houseId as any);

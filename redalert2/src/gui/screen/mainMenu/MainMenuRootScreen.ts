@@ -187,6 +187,9 @@ export class MainMenuRootScreen extends RootScreen {
         else if (screenType === MainMenuScreenType.Score) {
             screen = new screenClass(this.strings, this.jsxRenderer, (this as any).wolService);
         }
+        else if (screenType === MainMenuScreenType.Campaign) {
+            screen = new screenClass(this.strings, this.jsxRenderer, this.music);
+        }
         else if (screenType === MainMenuScreenType.LoadGame) {
             const { ErrorHandler } = await import('../../../ErrorHandler.js');
             const errorHandler = new ErrorHandler(this.messageBoxApi, this.strings);

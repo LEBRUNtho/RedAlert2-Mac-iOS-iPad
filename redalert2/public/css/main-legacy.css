@@ -2155,6 +2155,10 @@ input[type="range"]:focus {
     margin-right: 5px;
 }
 
+#ra2web-root .replay-sel-form .campaign-list {
+    height: 210px;
+}
+
 #ra2web-root .replay-sel-form .replay-details {
     border: 1px red solid;
     padding: 3px;

@@ -5,7 +5,7 @@ export class ChangeHouseExecutor extends TriggerExecutor {
     private readonly houseId: number;
     constructor(params: string[], context: any) {
         super(params, context);
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.action.params[1]);
     }
     execute(game: any, objects: any[]): void {
         let targetPlayer;

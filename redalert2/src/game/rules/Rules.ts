@@ -1,3 +1,4 @@
+import { IniSection as IniSectionClass } from "@/data/IniSection";
 import { Color } from "@/util/Color";
 import { ObjectType } from "@/engine/type/ObjectType";
 import { CountryRules } from "@/game/rules/CountryRules";
@@ -466,7 +467,19 @@ export class Rules {
                 throw new Error("Missing ini section for country " + name);
             }
             const rules = new CountryRules(id as any);
-            rules.readIni(section as any);
+            // Campagne : les pays déclarés par une carte de mission (Player, BadGuy1…) héritent de
+            // leur ParentCountry pour toutes les clés qu'ils ne redéfinissent pas, comme dans le jeu original.
+            const parentName = (section as any).getString("ParentCountry");
+            const parentSection = parentName ? this.ini.getSection(parentName) : undefined;
+            if (parentSection && parentName !== name) {
+                const effective = new IniSectionClass(name);
+                (parentSection as any).entries.forEach((value: any, key: string) => effective.set(key, value));
+                (section as any).entries.forEach((value: any, key: string) => effective.set(key, value));
+                rules.readIni(effective as any);
+            }
+            else {
+                rules.readIni(section as any);
+            }
             this.countryRules.set(name, rules);
         });
     }

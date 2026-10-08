@@ -27,6 +27,12 @@ export class DirectionalTileFinder {
         this.distance = distance;
     }
     getNextTile(): Tile | undefined {
+        // Correctif : une distance maximale nulle ou négative (pont d'un seul morceau) faisait boucler
+        // la recherche à l'infini au chargement de certaines cartes (ex. Soviétiques 11).
+        if (!this.finished && this.distance > this.maxDistance) {
+            this.finished = true;
+            return undefined;
+        }
         if (!this.finished) {
             let result: Tile | undefined;
             do {

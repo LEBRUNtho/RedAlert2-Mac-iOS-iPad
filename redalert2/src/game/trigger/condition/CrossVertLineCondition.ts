@@ -13,7 +13,7 @@ export class CrossVertLineCondition extends TriggerCondition {
             event.source.zone !== ZoneType.Air &&
             this.targets.some((target) => target.rx === event.target.rx) &&
             (-1 === this.houseId ||
-                event.source.owner.country?.id === this.houseId))
+                event.source.owner?.country?.id === this.houseId))
             .map((event) => event.target);
     }
 }

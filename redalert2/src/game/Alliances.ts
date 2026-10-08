@@ -77,6 +77,17 @@ export class Alliances {
         this.alliances.push(alliance);
         return alliance;
     }
+    /** Mission : alliances imposées par la carte, sans les restrictions du salon multijoueur. */
+    forceAlliance(player1: Player, player2: Player): Alliance {
+        const existing = this.findByPlayers(player1, player2);
+        if (existing) {
+            existing.status = AllianceStatus.Formed;
+            return existing;
+        }
+        const alliance: Alliance = { players: new PlayerPair(player1, player2), status: AllianceStatus.Formed };
+        this.alliances.push(alliance);
+        return alliance;
+    }
     breakAlliance(player1: Player, player2: Player): void {
         const alliance = this.findByPlayers(player1, player2);
         if (!alliance || alliance.status !== AllianceStatus.Formed) {

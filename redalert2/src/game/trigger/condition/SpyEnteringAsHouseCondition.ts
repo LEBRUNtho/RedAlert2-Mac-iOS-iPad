@@ -4,9 +4,9 @@ export class SpyEnteringAsHouseCondition extends TriggerCondition {
     private houseId: number;
     constructor(params: any[], targets: any[]) {
         super(params, targets);
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.event.params[1]);
     }
-    check(events: any[], targets: any[]): any[] {
+    check(_game: any, events: any[]): any[] {
         return events
             .filter((event) => {
             if (event.type !== EventType.BuildingInfiltration)

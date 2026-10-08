@@ -5,7 +5,7 @@ export class DestroyedAllBuildingsCondition extends TriggerCondition {
     private houseId: number;
     constructor(params: any[], trigger: any) {
         super(params, trigger);
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.event.params[1]);
     }
     check(event: any, events: any[]): boolean {
         if (this.allDestroyed) {
@@ -17,8 +17,8 @@ export class DestroyedAllBuildingsCondition extends TriggerCondition {
             }
             const target = event.target;
             const isTargetBuilding = target.isBuilding();
-            const isTargetOwner = target.owner.country?.id === this.houseId;
-            const hasNoBuildings = !target.owner.buildings.size;
+            const isTargetOwner = target.owner?.country?.id === this.houseId;
+            const hasNoBuildings = !target.owner?.buildings.size;
             return isTargetBuilding && isTargetOwner && hasNoBuildings;
         });
         if (hasDestroyedAll) {

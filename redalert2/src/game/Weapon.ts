@@ -197,7 +197,10 @@ export class Weapon {
             }
             const spawnedUnitRules: any = rulesEngine.getObject((gameObject as any).rules.spawns, ObjectType.Aircraft);
             if (!spawnedUnitRules.primary) {
-                throw new Error(`Spawned unit doesn't have a primary weapon`);
+                // Certaines cartes de campagne (Yuri) déclarent des engins sans arme : ogive de repli au lieu
+                // de bloquer tout le chargement de la mission.
+                console.warn(`Spawned unit "${spawnedUnitRules.name}" has no primary weapon; using V3 warhead`);
+                return rulesEngine.combatDamage.v3Warhead;
             }
             warheadName = rulesEngine.getWeapon(spawnedUnitRules.primary).warhead;
         }

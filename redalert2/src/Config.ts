@@ -69,6 +69,11 @@ export class Config {
     }
     /** "ra2" (default) or "yr" — which game the engine boots as. */
     get engine(): string {
+        // Banc d'essai : ?moteur=ra2|yr force le mode sans toucher à config.ini.
+        const override = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("moteur") : null;
+        if (override === "ra2" || override === "yr") {
+            return override;
+        }
         return this.generalData.getString("engine") || "ra2";
     }
     get gameresBaseUrl(): string | undefined {

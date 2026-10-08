@@ -1,7 +1,10 @@
 export enum TriggerEventType {
     NoEvent = 0,
+    SelectedByPlayer = 33,
     EnteredBy = 1,
     SpiedBy = 2,
+    DiscoveredByPlayer = 4,
+    HouseDiscovered = 5,
     AttackedByAny = 6,
     DestroyedByAny = 7,
     AnyEvent = 8,
@@ -48,5 +51,9 @@ export enum TriggerEventType {
     SpyEnteringAsInfantry = 54,
     DestroyedAllUnitsNaval = 55,
     DestroyedAllUnitsLand = 56,
-    BuildingNotExists = 57
+    BuildingNotExists = 57,
+    PowerFull = 58,
+    EnteredOrOverflownBy = 59,
+    TechTypeExists = 60,
+    TechTypeNotExists = 61
 }

@@ -63,5 +63,9 @@ export enum EventType {
     TriggerEva = 61,
     TriggerAnim = 62,
     TriggerText = 63,
-    TimerExpire = 64
+    TimerExpire = 64,
+    ObjectsSelected = 65,
+    ScenarioCameraCenter = 66,
+    ScenarioMovie = 67,
+    ScenarioSidebarTab = 68
 }

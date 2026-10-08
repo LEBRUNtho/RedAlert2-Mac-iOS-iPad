@@ -4,9 +4,9 @@ export class SpyEnteringAsInfantryCondition extends TriggerCondition {
     private infantryIdx: number;
     constructor(params: any[], targets: any[]) {
         super(params, targets);
-        this.infantryIdx = Number(params[1]);
+        this.infantryIdx = Number(this.event.params[1]);
     }
-    check(events: any[], targets: any[]): any[] {
+    check(_game: any, events: any[]): any[] {
         return events
             .filter((event) => {
             if (event.type !== EventType.BuildingInfiltration)

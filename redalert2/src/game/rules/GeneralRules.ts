@@ -177,7 +177,9 @@ export class GeneralRules {
             case this.dMisl.type:
                 return this.dMisl;
             default:
-                throw new Error(`Unsupported missile type "${type}"`);
+                // Missile inconnu du moteur (ex. CMISL, missile de croisière du Boomer de Yuri) :
+                // comportement du V3 plutôt que d'interrompre la partie.
+                return this.v3Rocket;
         }
     }
 }

@@ -61,6 +61,15 @@ export class HomeScreen implements Screen {
                     }
                 }
             },
+            // Campagne : RA2 dans l'app Red Alert 2, Yuri's Revenge dans l'app Yuri (les cartes RA2 supposent
+            // la liste de pays de RA2, décalée d'un cran dans Yuri's Revenge, d'où deux apps).
+            {
+                label: 'Campaign',
+                tooltip: 'Allied and Soviet campaigns',
+                onClick: () => {
+                    this.controller?.goToScreen(MainMenuScreenType.Campaign);
+                }
+            },
             {
                 label: 'Load Game',
                 tooltip: 'Continue a saved skirmish match',

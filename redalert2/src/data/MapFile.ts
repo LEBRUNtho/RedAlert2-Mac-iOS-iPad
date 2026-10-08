@@ -270,6 +270,7 @@ export class MapFile extends IniFile {
             vehicle.rx = Number(values[3]);
             vehicle.ry = Number(values[4]);
             vehicle.direction = Number(values[5]);
+            vehicle.mission = values[6];
             vehicle.tag = this.readTagId(values[7]);
             vehicle.veterancy = Number(values[8]);
             vehicle.onBridge = values[10] === "1";
@@ -296,6 +297,7 @@ export class MapFile extends IniFile {
             infantry.ry = Number(values[4]);
             infantry.subCell = Number(values[5]);
             infantry.direction = Number(values[7]);
+            infantry.mission = values[6];
             infantry.tag = this.readTagId(values[8]);
             infantry.veterancy = Number(values[9]);
             infantry.onBridge = values[11] === "1";
@@ -317,6 +319,7 @@ export class MapFile extends IniFile {
             aircraft.rx = Number(values[3]);
             aircraft.ry = Number(values[4]);
             aircraft.direction = Number(values[5]);
+            aircraft.mission = values[6];
             aircraft.tag = this.readTagId(values[7]);
             aircraft.veterancy = Number(values[8]);
             aircraft.onBridge = values[values.length - 4] === "1";

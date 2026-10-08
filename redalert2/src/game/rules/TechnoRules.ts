@@ -686,12 +686,16 @@ export class TechnoRules extends ObjectRules {
         return burstDelays;
     }
     public hasOwner(house: House): boolean {
-        return this.owner.length > 0 && this.owner.indexOf(house.name) !== -1;
+        return this.owner.length > 0 && (this.owner.indexOf(house.name) !== -1 ||
+            (!!(house as any).parentCountry && this.owner.indexOf((house as any).parentCountry) !== -1));
     }
     public isAvailableTo(house: House): boolean {
+        const parent = (house as any).parentCountry;
         const hasRequiredHouse = this.requiredHouses.length === 0 ||
-            this.requiredHouses.indexOf(house.name) !== -1;
-        const isForbidden = this.forbiddenHouses.indexOf(house.name) !== -1;
+            this.requiredHouses.indexOf(house.name) !== -1 ||
+            (!!parent && this.requiredHouses.indexOf(parent) !== -1);
+        const isForbidden = this.forbiddenHouses.indexOf(house.name) !== -1 ||
+            (!!parent && this.forbiddenHouses.indexOf(parent) !== -1);
         return hasRequiredHouse && !isForbidden;
     }
     public getWeaponAtIndex(index: number): string | undefined {

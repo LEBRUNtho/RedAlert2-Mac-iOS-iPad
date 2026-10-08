@@ -209,7 +209,9 @@ export class AirSpawnTrait implements NotifyDestroy, NotifyOwnerChange, NotifySp
                     damage = isElite ? rules.general.dMisl.eliteDamage : rules.general.dMisl.damage;
                 }
                 else {
-                    throw new Error(`Unhandled missile type "${launcher.rules.spawns}"`);
+                    // Missile inconnu du moteur (ex. CMISL du Boomer de Yuri) : dégâts du missile du cuirassé.
+                    warheadType = isElite ? rules.combatDamage.dMislEliteWarhead : rules.combatDamage.dMislWarhead;
+                    damage = isElite ? rules.general.dMisl.eliteDamage : rules.general.dMisl.damage;
                 }
                 const warhead = new Warhead(world.rules.getWarhead(warheadType));
                 spawn.missileSpawnTrait.setDamage(damage).setWarhead(warhead).setLauncher(launcher);

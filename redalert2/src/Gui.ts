@@ -337,6 +337,8 @@ export class Gui {
         subScreens.set(MainMenuScreenType.ReplaySelection, ReplaySelScreen);
         const { LoadGameScreen } = await import('./gui/screen/mainMenu/loadGame/LoadGameScreen.js');
         subScreens.set(MainMenuScreenType.LoadGame, LoadGameScreen);
+        const { CampaignScreen } = await import('./gui/screen/mainMenu/campaign/CampaignScreen.js');
+        subScreens.set(MainMenuScreenType.Campaign, CampaignScreen);
         const { ReplayManager } = await import('./gui/ReplayManager.js');
         let replayManager: any;
         try {
@@ -397,6 +399,18 @@ export class Gui {
         }, clientApi.battleControl);
         this.rootController.addScreen(ScreenType.Replay, replayScreen as any);
         this.rootController.goToScreen(ScreenType.MainMenuRoot);
+        // Lancement d'une mission de campagne (menu principal, et ?mission=all01t.map en développement).
+        const { createScenarioGameOpts } = await import('./game/campaign/Scenario.js');
+        const rootController = this.rootController;
+        (window as any).__ra2LaunchMission = (mapName: string, difficulty: number = 1, returnTo?: any) => {
+            const gameOpts = createScenarioGameOpts(mapName.toLowerCase(), 'Commandant', difficulty);
+            rootController.createGame('0', Math.floor(Date.now() / 1000) * 1000, '', 'Commandant', gameOpts, true, false, false, false, returnTo);
+        };
+        const missionParam = new URLSearchParams(window.location.search).get('mission');
+        if (missionParam) {
+            const difficulty = Number(new URLSearchParams(window.location.search).get('difficulte') ?? 1);
+            (window as any).__ra2LaunchMission(missionParam, difficulty);
+        }
     }
     private startAnimationLoop(): void {
         console.log('[Gui] Animation loop already started by UiAnimationLoop');

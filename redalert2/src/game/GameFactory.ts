@@ -2,6 +2,7 @@ import { Rules } from './rules/Rules';
 import { Art } from './art/Art';
 import { IniFile } from '../data/IniFile';
 import { Country } from './Country';
+import { SideType } from './SideType';
 import { ObjectFactory } from './gameobject/ObjectFactory';
 import { World } from './World';
 import { GameMap } from './GameMap';
@@ -35,6 +36,8 @@ import { Ai } from './ai/Ai';
 import { BotFactory } from './bot/BotFactory';
 import { BotManager } from './BotManager';
 import { isHumanPlayerInfo } from './gameopts/GameOpts';
+import { isScenario, readScenarioHouses } from './campaign/Scenario';
+import { ScenarioState } from './campaign/ScenarioState';
 interface GameMode {
     type: string;
 }
@@ -100,6 +103,12 @@ export class GameFactory {
         const generatedColors: Map<PlayerInfo, string> = randomGen.generateColors(gameOpts) as any;
         const generatedCountries: Map<PlayerInfo, string> = randomGen.generateCountries(gameOpts, baseMultiplayerRules) as any;
         const generatedStartLocations: Map<PlayerInfo, number> = randomGen.generateStartLocations(gameOpts, gameMap.startingLocations as any);
+        if (isScenario(gameOpts)) {
+            game.scenarioState = new ScenarioState(gameOptions, aiConfig, (gameOpts as any).scenario?.difficulty ?? 1);
+            this.createScenarioPlayers(game, gameOptions, gameOpts, playerFactory, rules);
+            game.addPlayer(playerFactory.createNeutral(rules, "@@NEUTRAL@@"));
+            return game;
+        }
         const allPlayers: (HumanPlayerInfo | AiPlayerInfo)[] = [
             ...gameOpts.humanPlayers,
             ...gameOpts.aiPlayers
@@ -167,6 +176,44 @@ export class GameFactory {
             const player = playerFactory.createCombatant(playerName, country, resolvedStartPos, color, isAi, aiDifficulty, customBotId);
             game.addPlayer(player);
         });
+    }
+    /** Mission : un joueur par maison déclarée dans la carte, le joueur humain étant la maison PlayerControl=yes. */
+    private static createScenarioPlayers(game: Game, mapIni: any, gameOpts: GameOpts, playerFactory: PlayerFactory, rules: Rules): void {
+        const humanName = gameOpts.humanPlayers[0]?.name;
+        const houses = readScenarioHouses(mapIni);
+        // Le joueur est la maison désignée par [Basic] Player= (à défaut, la première PlayerControl=yes).
+        const basicPlayer = mapIni.getSection("Basic")?.getString("Player");
+        const humanHouse = houses.find((h) => h.houseName === basicPlayer || h.countryName === basicPlayer)?.houseName
+            ?? houses.find((h) => h.playerControl)?.houseName;
+        const controlled: any[] = [];
+        let human: any;
+        for (const house of houses) {
+            const country: Country = Country.factory(house.countryName, rules as any);
+            const color = (rules as any).colors.get(house.colorName) ?? (rules as any).colors.get("LightGrey");
+            const isHuman = house.houseName === humanHouse && !!humanName;
+            const player = playerFactory.createCombatant(isHuman ? humanName : house.houseName, country, 0, color, !isHuman, undefined);
+            (player as any).scenarioHouse = house;
+            // En mission, seuls les camps civils sont neutres : GDI/Nod (« MultiplayPassive » dans les règles)
+            // sont de vrais combattants sur certaines cartes (ex. Alliés 2).
+            (player as any).isNeutral = (country.side as any) === SideType.Civilian || (country.side as any) === SideType.Mutant;
+            if (isHuman) {
+                human = player;
+            }
+            else if (house.playerControl) {
+                controlled.push(player);
+            }
+            // Niveau technologique propre à la maison (ex. 3 pour le joueur en mission 1).
+            if ((player as any).production && house.techLevel > 0) {
+                (player as any).production.maxTechLevel = house.techLevel;
+            }
+            game.addPlayer(player);
+        }
+        // Autres maisons « PlayerControl=yes » (Tanya House, Spies House…) : le joueur commande aussi leurs unités.
+        for (const player of controlled) {
+            player.controlledBy = human;
+        }
+        // Joueur humain de la simulation (indépendant du joueur affiché par l'interface, ex. relecture).
+        game.scenarioState!.humanPlayer = human;
     }
     private static validateResolvedValues(countryId: string, colorId: string, startPos: number): void {
         if (countryId === (RANDOM_COUNTRY_ID as any)) {

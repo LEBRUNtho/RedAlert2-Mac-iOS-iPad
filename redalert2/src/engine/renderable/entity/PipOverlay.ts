@@ -366,7 +366,8 @@ export class PipOverlay {
         const foundationHeight = gameObject.art.foundation.height;
         const health = gameObject.healthTrait.health;
         const spacing = 4 * Coords.ISO_WORLD_SCALE;
-        const maxPips = Math.floor((foundationHeight * Coords.getWorldTileSize()) / spacing);
+        // Au moins une case : un bâtiment d'emprise nulle (cartes de campagne de Yuri) faisait planter le rendu.
+        const maxPips = Math.max(1, Math.floor((foundationHeight * Coords.getWorldTileSize()) / spacing) || 0);
         const healthPips = Math.max(1, Math.floor((health / 100) * maxPips));
         let pipImageIndex: number;
         if (health > 100 * this.audioVisualRules.conditionYellow) {

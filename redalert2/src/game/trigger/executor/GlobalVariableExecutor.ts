@@ -5,7 +5,7 @@ export class GlobalVariableExecutor extends TriggerExecutor {
     constructor(params: any, context: any, value: any) {
         super(params, context);
         this.value = value;
-        this.variableIdx = Number(params[1]);
+        this.variableIdx = Number(this.action.params[1]);
     }
     execute(context: any): void {
         context.triggers.toggleGlobalVariable(this.variableIdx, this.value);

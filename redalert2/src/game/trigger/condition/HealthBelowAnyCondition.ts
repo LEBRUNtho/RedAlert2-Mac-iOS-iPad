@@ -6,7 +6,7 @@ export class HealthBelowAnyCondition extends TriggerCondition {
         super(id, targets);
         this.threshold = threshold;
     }
-    check(events: any[], targets: any[]): any[] {
+    check(_game: any, events: any[]): any[] {
         return events
             .filter((event) => {
             if (event.type !== EventType.HealthChange)

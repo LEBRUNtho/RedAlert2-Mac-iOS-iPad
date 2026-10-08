@@ -25,6 +25,35 @@ your install:
 ./scripts/setup.sh /path/to/your/ra2/install
 ```
 
+## Campaign mode (alpha), added in this fork
+
+Hi! This fork is a hobby experiment: I'm having fun with an AI (Claude) to see how far the single-player
+campaigns can go on top of ammaarreshi's port. Everything below was written with the AI and tested on a
+desktop browser harness; it has **not** been played start to finish on an iPhone yet, so expect rough edges.
+
+What it adds:
+
+- **Campaign screen** in the main menu: Allied and Soviet campaigns with the official operation names,
+  briefings, difficulty, briefing movies, and progress saved on the device. The RA2 campaign lives in the
+  "Red Alert 2" app variant (`./scripts/build-ios.sh --ra2`), the Yuri's Revenge campaign in the default
+  app, because RA2 mission maps expect RA2's country list.
+- **Mission engine**: houses from the map, scripted teams (TaskForces / ScriptTypes / TeamTypes),
+  reinforcements (transports that land and unload, paratroopers dropped by plane), campaign AI
+  (AITriggerTypes, production, base rebuilding), most trigger events and actions of RA2 and Yuri's Revenge,
+  on-screen objectives, EVA voices and in-game movies. All of it runs inside the deterministic simulation,
+  so saves and replays keep working.
+- **Engine fixes** found along the way, for example a dozen trigger conditions that could never fire,
+  and an infinite loop when loading maps with a one-piece bridge.
+- Desktop test harness in `redalert2/outils/` (headless Chromium, launch a mission with `?mission=all01t.map`).
+
+Status: the 26 RA2 maps and the 14 Yuri's Revenge maps load, and a brute "destroy every enemy" test
+reaches victory on every mission where that is the objective. Missing: some cosmetic effects (flashing
+units, scripted particles, positional ambient sounds) and the end-of-campaign movies.
+
+Like the rest of this repository, it needs your own retail copy of the game: `setup.sh` now also imports
+the campaign maps and converts the campaign movies (`MOVIES01/02.MIX`, `movmd03.mix`) to MP4.
+No game assets are included.
+
 ## Why this port is shaped differently than Generals
 
 The sibling project ([Generals-Mac-iOS-iPad](https://github.com/ammaarreshi/Generals-Mac-iOS-iPad))

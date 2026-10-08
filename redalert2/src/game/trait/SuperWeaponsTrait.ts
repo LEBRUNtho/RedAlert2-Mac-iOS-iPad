@@ -78,7 +78,7 @@ export class SuperWeaponsTrait {
         return [...t.owner.buildings].find((e: any) => !(e.superWeaponTrait?.getSuperWeapon(e) !== t ||
             (e.warpedOutTrait.isActive() && t.rules.isPowered)));
     }
-    private addEffect(e: SuperWeaponEffect) {
+    addEffect(e: SuperWeaponEffect) {
         this.effects.push(e);
     }
     activateSuperWeapon(t: SuperWeaponType, e: any, i: any, r: any, s: any) {

@@ -191,7 +191,10 @@ export class Application {
             return;
         }
         let csfFileValue = currentConfig.getGeneralData().get('csfFile') || 'ra2/general.csf';
-        const csfFileName = Array.isArray(csfFileValue) ? csfFileValue[0] : csfFileValue;
+        let csfFileName = Array.isArray(csfFileValue) ? csfFileValue[0] : csfFileValue;
+        if (this.config?.engine === 'ra2' && /generalmd\.csf$/i.test(csfFileName)) {
+            csfFileName = csfFileName.replace(/generalmd\.csf$/i, 'general.csf');
+        }
         console.log(`[Application] Attempting to load CSF file: ${csfFileName}`);
         try {
             const csfResponse = await fetch(`/${csfFileName}`);

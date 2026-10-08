@@ -46,6 +46,8 @@ export class TechnoObject extends NamedMapObject {
     tag?: string;
     veterancy = 0;
     onBridge = false;
+    /** Mission initiale (« Guard », « Harvest », « Hunt »…), utilisée par les cartes de campagne. */
+    mission?: string;
 }
 export class TechnoTypeObject extends TechnoObject {
 }

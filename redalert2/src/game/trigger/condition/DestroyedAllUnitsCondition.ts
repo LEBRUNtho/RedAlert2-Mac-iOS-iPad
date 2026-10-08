@@ -7,9 +7,9 @@ export class DestroyedAllUnitsCondition extends TriggerCondition {
     constructor(params: any[], trigger: any) {
         super(params, trigger);
         this.allDestroyed = false;
-        this.houseId = Number(params[1]);
+        this.houseId = Number(this.event.params[1]);
     }
-    check(events: any[], context: any): boolean {
+    check(_game: any, events: any[]): boolean {
         if (this.allDestroyed) {
             return true;
         }
@@ -18,7 +18,7 @@ export class DestroyedAllUnitsCondition extends TriggerCondition {
                 return false;
             }
             const target = event.target;
-            if (!target.isUnit() || target.owner.country?.id !== this.houseId) {
+            if (!target.isUnit() || target.owner?.country?.id !== this.houseId) {
                 return false;
             }
             return !this.hasUnitsLeft(target.owner);
@@ -35,7 +35,8 @@ export class DestroyedAllUnitsCondition extends TriggerCondition {
             ObjectType.Infantry,
         ];
         for (const type of unitTypes) {
-            if (owner.getOwnedObjectsByType(type, true).length) {
+            // L'unité détruite figure encore dans la liste de son propriétaire au moment de l'événement.
+            if (owner.getOwnedObjectsByType(type, true).some((o: any) => !o.isDestroyed)) {
                 return true;
             }
         }

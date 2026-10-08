@@ -1,3 +1,5 @@
+import { controls } from '@/game/campaign/Control';
+import { ObjectsSelectedEvent } from '../event/ObjectsSelectedEvent';
 import { Action } from './Action';
 import { ActionType } from './ActionType';
 import { DataStream } from '@/data/DataStream';
@@ -7,8 +9,10 @@ import { GameObject } from '../gameobject/GameObject';
 export class SelectUnitsAction extends Action {
     private _unitIds: number[] = [];
     private orderActionContext: OrderActionContext;
+    private game: any;
     constructor(game: any, orderActionContext: OrderActionContext) {
         super(ActionType.SelectUnits);
+        this.game = game;
         this.orderActionContext = orderActionContext;
     }
     get unitIds(): number[] {
@@ -39,11 +43,19 @@ export class SelectUnitsAction extends Action {
         const player = this.player;
         const units: GameObject[] = [];
         for (const id of this.unitIds) {
-            const unit = player.getOwnedObjectById(id);
+            // Mission : les unités des maisons que le joueur commande aussi (PlayerControl=yes).
+            let unit = player.getOwnedObjectById(id);
+            if (!unit && this.game?.getWorld?.().hasObjectId(id)) {
+                const other = this.game.getObjectById(id);
+                unit = controls(player, other) ? other : undefined;
+            }
             if (unit) {
                 units.push(unit);
             }
         }
         this.orderActionContext.getOrCreateSelection(player).update(units);
+        if (units.length) {
+            this.game?.events?.dispatch(new ObjectsSelectedEvent(player, units));
+        }
     }
 }

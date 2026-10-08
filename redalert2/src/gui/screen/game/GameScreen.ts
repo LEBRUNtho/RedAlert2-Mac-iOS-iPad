@@ -1,3 +1,7 @@
+import { EngineType } from '@/engine/EngineType';
+import { playMovie } from '@/gui/MoviePlayer';
+import { EventType as ScenarioEventType } from '@/game/event/EventType';
+import { markMissionWon } from '@/gui/screen/mainMenu/campaign/CampaignData';
 import { powerFrameCap } from '@/engine/PowerState';
 import { RootScreen } from '@/gui/screen/RootScreen';
 import { CompositeDisposable } from '@/util/disposable/CompositeDisposable';
@@ -192,7 +196,8 @@ export class GameScreen extends RootScreen {
                 this.disposables.add(() => this.debugMapFile = undefined);
             }
             mapFile = new MapFile(mapFileData);
-            const mapSupportError = MapSupport.check(mapFile, this.strings);
+            // Les cartes de campagne n'ont pas de positions de départ multijoueur : pas de contrôle d'escarmouche.
+            const mapSupportError = gameOpts?.scenario ? undefined : MapSupport.check(mapFile, this.strings);
             if (mapSupportError) {
                 this.handleError(mapSupportError, mapSupportError);
                 return;
@@ -237,6 +242,8 @@ export class GameScreen extends RootScreen {
         }
         const { game, theater, hudSide, cameoFilenames } = gameLoadResult;
         this.game = game;
+        // Banc d'essai (outils/banc.mjs) : accès à la partie en cours depuis la console.
+        (window as any).__ra2Game = game;
         this.disposables.add(game, () => this.game = undefined, () => Engine.unloadTheater(theater.type));
         let localPlayer: any;
         try {
@@ -1102,6 +1109,33 @@ export class GameScreen extends RootScreen {
             getVictoryBlockers: () => getVictoryBlockers(),
         };
         this.pointer.setVisible(true);
+        // Mission : vidéos « Play Ingame Movie » dans la fenêtre radar (index de la liste [Movies] de art.ini).
+        if ((game as any).scenarioState) {
+            const unsubscribeMovie = game.events.subscribe(ScenarioEventType.ScenarioMovie as any, (event: any) => {
+                const movies = Engine.getArt()?.getSection?.('Movies');
+                const name = movies?.getString?.(String(event.movieIndex));
+                if (!name) {
+                    return;
+                }
+                if (event.pauseGame && this.isSinglePlayer) {
+                    // « Play Movie » plein écran : la partie se fige pendant le film, comme dans l'original.
+                    const previousSpeed = game.desiredSpeed.value;
+                    game.desiredSpeed.value = Number.EPSILON;
+                    this.mixer.setMuted(ChannelType.Effect, true);
+                    this.mixer.setMuted(ChannelType.Ambient, true);
+                    void playMovie(name, 'full').finally(() => {
+                        game.desiredSpeed.value = previousSpeed;
+                        this.mixer.setMuted(ChannelType.Effect, false);
+                        this.mixer.setMuted(ChannelType.Ambient, false);
+                    });
+                }
+                else {
+                    // « Play Ingame Movie » : petite fenêtre radar, la partie continue.
+                    void playMovie(name, event.pauseGame ? 'full' : 'radar');
+                }
+            });
+            this.disposables.add(unsubscribeMovie);
+        }
         const gameEndHandler = () => this.onGameEnd(game, localPlayer, eva, replay);
         game.onEnd.subscribe(gameEndHandler);
         this.disposables.add(() => game.onEnd.unsubscribe(gameEndHandler));
@@ -1310,8 +1344,14 @@ export class GameScreen extends RootScreen {
 
         try {
             const isObserver = Boolean(localPlayer?.isObserver);
-            const isVictory = !localPlayer?.defeated ||
-                game?.alliances?.getAllies(localPlayer)?.some((ally: any) => !ally.defeated);
+            const scenarioResult = game?.scenarioState?.result;
+            if (scenarioResult === 'win' && game?.gameOpts?.scenario?.mapName) {
+                markMissionWon(game.gameOpts.scenario.mapName, Engine.getActiveEngine() === EngineType.YurisRevenge);
+            }
+            const isVictory = scenarioResult
+                ? scenarioResult === 'win'
+                : !localPlayer?.defeated ||
+                    game?.alliances?.getAllies(localPlayer)?.some((ally: any) => !ally.defeated);
 
             console.log('[GameScreen] onGameEnd', {
                 singlePlayer: this.isSinglePlayer,

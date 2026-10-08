@@ -97,6 +97,10 @@ if [[ "$VARIANT" == "ra2" ]]; then
   # Strip YR-only content (engine in ra2 mode ignores it; saves ~350MB).
   rm -f "$IOS/Resources/GameRes"/{ra2md.mix,langmd.mix,multimd.mix,expandmd01.mix}
   rm -f "$IOS/Resources/GameRes"/*.yro
+  rm -rf "$IOS/Resources/GameRes/moviesmd"
+else
+  # Chaque app n'embarque que les films de sa campagne.
+  rm -rf "$IOS/Resources/GameRes/movies"
 fi
 
 echo "==> Generating GameRes manifest"
@@ -107,6 +111,9 @@ files = []
 for dirpath, _, names in os.walk(root):
     for name in sorted(names):
         if name == ".DS_Store" or name == "manifest.json":
+            continue
+        # Les films restent dans l'app (lus directement) : pas de copie au premier lancement.
+        if os.path.relpath(dirpath, root).split(os.sep)[0] in ("movies", "moviesmd"):
             continue
         full = os.path.join(dirpath, name)
         rel = os.path.relpath(full, root)

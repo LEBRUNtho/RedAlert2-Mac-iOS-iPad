@@ -33,7 +33,8 @@ export class BotManager {
     init(game: any): void {
         this.gameApi = new GameApi(game, true);
         const eventsApi = new EventsApi(game.events);
-        const aiCombatants = game.getCombatants().filter((c: any) => c.isAi);
+        // Les maisons IA d'une mission sont pilotées par les scripts de la carte, pas par un bot d'escarmouche.
+        const aiCombatants = game.getCombatants().filter((c: any) => c.isAi && !c.scenarioHouse);
         logger.info(`[BotManager] Initializing ${aiCombatants.length} AI player(s)`);
         for (const combatant of aiCombatants) {
             try {

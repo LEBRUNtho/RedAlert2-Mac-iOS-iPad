@@ -5,6 +5,7 @@ interface CountryRules {
     name: string;
     multiplay: boolean;
     multiplayPassive: boolean;
+    parentCountry?: string;
     veteranAircraft: string[];
     veteranInfantry: string[];
     veteranUnits: string[];
@@ -26,6 +27,10 @@ export class Country {
     }
     get name(): string {
         return this.rules.name;
+    }
+    /** Pays parent d'un pays de carte de mission (ex. Player → Americans). */
+    get parentCountry(): string | undefined {
+        return this.rules.parentCountry;
     }
     isPlayable(): boolean {
         return this.rules.multiplay && !this.rules.multiplayPassive;
