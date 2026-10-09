@@ -24,6 +24,15 @@ echo "== Web + ressources (scripts/build-ios.sh, partie avant Xcode)"
 sed '/^echo "==> Building"$/,$d' "$ROOT/scripts/build-ios.sh" > "$ROOT/scripts/.stage-ios.sh"
 RA2_LIVENESS_OK=1 RA2_TEAM_ID="$SIGN_TEAM" RA2_BUNDLE_ID="$BUNDLE_ID" bash "$ROOT/scripts/.stage-ios.sh" $STAGE_ARGS
 
+echo "== Icône de l'app ($VARIANT)"
+# Une icône par app (ios/AppIcons/ra2.png ou yr.png), posée le temps du build puis l'icône du dépôt est remise.
+ICON="$ROOT/ios/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+if [ -f "$ROOT/ios/AppIcons/$VARIANT.png" ]; then
+  cp "$ICON" "$B/AppIcon.orig.png"
+  trap 'cp "$B/AppIcon.orig.png" "$ICON"' EXIT
+  cp "$ROOT/ios/AppIcons/$VARIANT.png" "$ICON"
+fi
+
 echo "== Xcode (sans signature)"
 rm -rf "$B/dd"
 xcodebuild -project "$ROOT/ios/RA2.xcodeproj" -scheme RA2 -configuration Release \

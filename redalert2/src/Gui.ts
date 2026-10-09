@@ -304,6 +304,13 @@ export class Gui {
             });
             hasShownDialog = true;
         }
+        // Logo + film d'intro, comme au lancement du jeu d'origine. Pas après une relance sur plantage,
+        // ni sur le banc (?intro=0 ou mission lancée directement).
+        const bootParams = new URLSearchParams(location.search);
+        if (bootParams.get('intro') !== '0' && !bootParams.has('crashRecovery') && !bootParams.has('mission')) {
+            const { playIntroSequence } = await import('./gui/MoviePlayer.js');
+            await playIntroSequence();
+        }
         await this.navigateToMainMenu();
     }
     private async navigateToMainMenu(): Promise<void> {

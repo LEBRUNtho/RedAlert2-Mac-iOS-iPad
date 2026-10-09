@@ -400,6 +400,14 @@ export class AttackTrait implements NotifyTick, NotifyDamage, NotifyTeleport {
                 (t.projectileRules.isAntiAir ? e.rules.airRangeBonus : 0);
         for (const d of this.scanTechnosAround(e, c, i)) {
             const u = this.selectWeaponFromList(e, d, d.tile, l, i, false, true, true);
+            // Campagne : les unités du joueur ne partent pas d'elles-mêmes poser une arme de contact
+            // (C4 de Tanya/SEAL) sur une cible éloignée ; sinon Tanya rase seule les cuirassés de la mission 1.
+            if (u &&
+                u.range < 2 &&
+                i.scenarioState?.isHumanSide(e.owner) &&
+                !this.rangeHelper.isInWeaponRange(e, d, u, i.rules)) {
+                continue;
+            }
             if (u &&
                 this.canPassiveAcquire(d, i) &&
                 i.isValidTarget(d) &&

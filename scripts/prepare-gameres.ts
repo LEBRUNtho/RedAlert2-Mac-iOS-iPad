@@ -175,7 +175,7 @@ for (const name of ["maps01.mix", "maps02.mix", "mapsmd03.mix"]) {
 }
 
 // Films de campagne : noms dans art(md).ini [Movies], contenu dans les MIX de films, convertis en MP4 H.264.
-function convertMovies(label: string, outDirName: string, artMix: string, artLocal: string, artName: string, movieMixNames: string[]): void {
+function convertMovies(label: string, outDirName: string, artMix: string, artLocal: string, artName: string, movieMixNames: string[], extraNames: string[] = []): void {
     console.log(`== Converting ${label} movies -> ${outDirName}/*.mp4`);
     mkdirSync(join(OUT, outDirName), { recursive: true });
     let artText = "";
@@ -187,7 +187,7 @@ function convertMovies(label: string, outDirName: string, artMix: string, artLoc
         return;
     }
     const moviesBody = artText.split(/^\[Movies\]\s*$/m)[1]?.split(/^\[/m)[0] ?? "";
-    const movieNames = [...moviesBody.matchAll(/^\d+=([A-Za-z0-9_]+)/gm)].map((m) => m[1]).filter((n) => /^[AS]\d\d_/i.test(n));
+    const movieNames = [...moviesBody.matchAll(/^\d+=([A-Za-z0-9_]+)/gm)].map((m) => m[1]).filter((n) => /^[AS]\d\d_/i.test(n)).concat(extraNames);
     const movieMixes: any[] = [];
     for (const name of movieMixNames) {
         try { movieMixes.push(openMix(retailFile(name))); } catch { console.warn(`   (skip) ${name} not found`); }
@@ -207,8 +207,8 @@ function convertMovies(label: string, outDirName: string, artMix: string, artLoc
     }
     console.log(`   ${converted}/${movieNames.length} movies`);
 }
-convertMovies("RA2 campaign", "movies", "ra2.mix", "local.mix", "art.ini", ["movies01.mix", "movies02.mix"]);
-convertMovies("Yuri's Revenge campaign", "moviesmd", "ra2md.mix", "localmd.mix", "artmd.ini", ["movmd03.mix"]);
+convertMovies("RA2 campaign", "movies", "ra2.mix", "local.mix", "art.ini", ["movies01.mix", "movies02.mix"], ["WESTLOGO"]);
+convertMovies("Yuri's Revenge campaign", "moviesmd", "ra2md.mix", "localmd.mix", "artmd.ini", ["movmd03.mix", "langmd.mix"], ["EA_WWLOGO"]);
 
 console.log("== Copying bonus map packs (*.mmx, *.yro)");
 for (const entry of readdirSync(RETAIL)) {

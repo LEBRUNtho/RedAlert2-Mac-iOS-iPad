@@ -85,3 +85,10 @@ export async function playMovie(name: string, mode: MovieMode = "full"): Promise
         });
     });
 }
+
+/** Séquence d'ouverture du jeu d'origine : logo Westwood puis film d'intro (chacun se passe d'un toucher). */
+export async function playIntroSequence(): Promise<void> {
+    const yr = Engine.getActiveEngine() === EngineType.YurisRevenge;
+    await playMovie(yr ? "ea_wwlogo" : "westlogo");
+    await playMovie("a00_f00e");
+}

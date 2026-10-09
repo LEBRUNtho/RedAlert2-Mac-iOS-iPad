@@ -62,6 +62,9 @@ export function installShellDebugLog(): void {
         }
     };
     const post = (level: string, args: unknown[]) => {
+        // Le lecteur de MIX journalise chaque entrée au démarrage : des milliers de requêtes inutiles.
+        if (typeof args[0] === 'string' && /^\[(Our|hashFilename)\]/.test(args[0]))
+            return;
         try {
             const text = args.map(safeArg).join(' ').slice(0, 4000);
             void fetch(endpoint, { method: 'POST', body: `[${level}] ${text}` }).catch(() => { });
@@ -77,6 +80,16 @@ export function installShellDebugLog(): void {
     }
     window.addEventListener('error', (e) => post('uncaught', [e.message, e.filename, e.lineno, (e.error?.stack ?? '')]));
     window.addEventListener('unhandledrejection', (e) => post('unhandledrejection', [e.reason]));
+    // Pouls : si l'app meurt, le dernier battement dit quand et dans quel état.
+    const t0 = Date.now();
+    setInterval(() => {
+        const g = (window as any).__ra2Game;
+        post('pouls', [`${Math.round((Date.now() - t0) / 1000)}s`, g ? `tick ${g.currentTick} statut ${g.status}` : 'menu',
+            `films ${document.querySelectorAll('video').length}`, location.search]);
+    }, 15000);
+    document.addEventListener('visibilitychange', () => post('vie', [`visibility ${document.visibilityState}`]));
+    window.addEventListener('pagehide', () => post('vie', ['pagehide']));
+    post('vie', ['démarrage', location.href, navigator.userAgent]);
 }
 
 /**
